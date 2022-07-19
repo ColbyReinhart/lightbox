@@ -60,7 +60,11 @@ int send_empty_response(int sock_fd, struct response_entry response)
 	sprintf
 	(
 		response_text,
-		"HTTP/1.1 %d %s\r\nAccess-Control-Allow-Origin: *\r\n\r\n", // I hate CORS
+		"HTTP/1.1 %d %s\r\n"
+		"Access-Control-Allow-Origin: *\r\n"
+		"Access-Control-Allow-Methods: GET, PUT, OPTIONS\r\n"
+		"Access-Control-Allow-Headers: X-PINGOTHER, Content-Type\r\n"
+		"Access-Control-Max-Age: 86400\r\n\r\n",
 		response.code,
 		response.message
 	);
