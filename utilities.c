@@ -60,7 +60,7 @@ int send_empty_response(int sock_fd, struct response_entry response)
 	sprintf
 	(
 		response_text,
-		"HTTP/1.1 %d %s\r\n\r\n",
+		"HTTP/1.1 %d %s\r\nAccess-Control-Allow-Origin: *\r\n\r\n", // I hate CORS
 		response.code,
 		response.message
 	);
