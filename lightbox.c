@@ -38,11 +38,14 @@ int main()
 		char* request_header = request;
 		char* request_body = end_of_header + 4;
 
-		printf("%s-----\n%s", request_header, request_body);
+		printf("%s\n-----\n%s\n", request_header, request_body);
 		
 		// Get what we care about from the header (this will improve later)
 		const char* request_type = strtok(request_header, " ");
 		const char* request_route = strtok(NULL, " ");
+
+		printf("Type:\t%s\n", request_type);
+		printf("Route:\t%s\n", request_route);
 
 		// If this is a CONNECT call, save the socket
 		if (strcmp(request_type, "CONNECT") == 0)
@@ -53,6 +56,13 @@ int main()
 				lightbox_socket = client_connection;
 			}
 
+			continue;
+		}
+
+		// If this is an OPTIONS call, send back a 200
+		if (strcmp(request_type, "OPTIONS") == 0)
+		{
+			send_empty_response(client_connection, http_200);
 			continue;
 		}
 

@@ -71,8 +71,10 @@ int send_empty_response(int sock_fd, struct response_entry response)
 	if (write(sock_fd, response_text, strlen(response_text)) == -1)
 	{
 		perror("Couldn't respond to client");
+		close(sock_fd);
 		return -1;
 	}
 
+	close(sock_fd);
 	return 0;
 }
