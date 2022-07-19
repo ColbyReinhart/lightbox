@@ -37,6 +37,8 @@ int main()
 		*end_of_header = '\0';
 		char* request_header = request;
 		char* request_body = end_of_header + 4;
+
+		printf("%s-----\n%s", request_header, request_body);
 		
 		// Get what we care about from the header (this will improve later)
 		const char* request_type = strtok(request_header, " ");
