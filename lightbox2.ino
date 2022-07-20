@@ -50,7 +50,7 @@ void setup() {
 
 void loop() {
   // Connect to server
-  if (!client.connect("colbyreinhart.com", 80))
+  if (!client.connect("colbyreinhart.com", 5000))
   {
     Serial.println("Connection to server failed. Trying again.");
     delay(5000);
