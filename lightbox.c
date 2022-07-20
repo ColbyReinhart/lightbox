@@ -53,8 +53,9 @@ int main()
 			if (lightbox_socket != -1)
 			{
 				close(lightbox_socket);
-				lightbox_socket = client_connection;
 			}
+			lightbox_socket = client_connection;
+			printf("Connected! Fd: %i\n", lightbox_socket);///
 
 			continue;
 		}
