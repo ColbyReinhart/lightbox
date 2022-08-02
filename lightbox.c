@@ -8,6 +8,26 @@
 #define errorQuit(msg) { perror(msg); exit(1); }
 
 int lightbox_socket;
+char* red = "255";
+char* green = "0";
+char* blue = "255";
+
+// Send a message to the box to keep the connection alive
+void pingBox()
+{
+	if (lightbox_socket == -1)
+	{
+		return;
+	}
+	
+	char response[100] = {0};
+	sprintf(response, "%s %s %s\n", red, green, blue);
+	if (write(lightbox_socket, response, strlen(response)) == -1)
+	{
+		perror("Couldn't write to lightbox");
+		exit(1);
+	}
+}
 
 int main()
 {
@@ -16,6 +36,26 @@ int main()
 	// Prepare server socket
 	const int listen_socket = make_server_socket(WEB_PORT);
 	if (listen_socket == -1) errorQuit("Couldn't make server socket");
+
+	// Set a timer to occasionally ping the box
+	struct itimerval new_timeset;
+
+	// It will go off every PING_INTERVAL seconds
+	new_timeset.it_interval.tv_sec = PING_INTERVAL;
+	new_timeset.it_interval.tv_usec = 0;
+
+	// Starting in PING_INTERVAL seconds
+	new_timeset.it_value.tv_sec = PING_INTERVAL;
+	new_timeset.it_value.tv_usec = 0;
+
+	if (setitimer(ITIMER_REAL, &new_timeset, NULL) == -1)
+	{
+		perror("Couldn't set ping timer");
+		return 1;
+	}
+
+	// Ping the box when the timer goes off
+	signal(SIGALRM, pingBox);
 
 	// Accept incoming calls (no multithreading for now)
 	while(1)
@@ -76,9 +116,9 @@ int main()
 		}
 
 		// Get the data
-		const char* red = strtok(request_body, " ");
-		const char* green = strtok(NULL, " ");
-		const char* blue = strtok(NULL, "\r\n");
+		red = strtok(request_body, " ");
+		green = strtok(NULL, " ");
+		blue = strtok(NULL, "\r\n");
 
 		// Write the data to the socket
 		char response[100] = {0};

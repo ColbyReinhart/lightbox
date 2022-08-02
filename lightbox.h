@@ -13,12 +13,14 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <sys/time.h>
 
 // General
 #define QSIZE 10				// Max amount of incoming calls to queue (arbitrary)
 #define MAX_REQ_LENGTH 8192		// Maximum length for a request
 #define ROOT_PATH "/webserver"
 #define WEB_PORT 5000
+#define PING_INTERVAL 900		// Every 15 minutes (900 seconds)
 
 struct response_entry
 {
