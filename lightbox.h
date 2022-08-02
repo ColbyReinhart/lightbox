@@ -22,6 +22,12 @@
 #define WEB_PORT 5000
 #define PING_INTERVAL 900		// Every 15 minutes (900 seconds)
 
+#ifdef TEST
+#define WEB_PORT 5050
+#else
+#define WEB_PORT 5000
+#endif
+
 struct response_entry
 {
 	int code;
