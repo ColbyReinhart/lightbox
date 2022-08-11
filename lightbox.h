@@ -14,21 +14,17 @@
 #include <fcntl.h>
 #include <errno.h>
 
-// General
-#define QSIZE 10				// Max amount of incoming calls to queue (arbitrary)
-#define MAX_REQ_LENGTH 8192		// Maximum length for a request
-#define ROOT_PATH "/webserver"
-#define WEB_PORT 5000
+#include "response.h"
 
-struct response_entry
-{
-	int code;
-	char* message;
-};
-const struct response_entry http_200;
-const struct response_entry http_400;
-const struct response_entry http_404;
-const struct response_entry http_500;
+// General
+#define QSIZE 10				// Max amount of incoming calls to queue
+#define MAX_REQ_LENGTH 8192		// Maximum length for a request
+
+#ifndef TEST
+#define WEB_PORT 5000
+#else
+#define WEB_PORT 5050
+#endif
 
 int make_server_socket(int port);
 int send_empty_response(int sock_fd, struct response_entry response);
