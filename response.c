@@ -6,30 +6,31 @@ const struct response_entry http_400 = {400, "Bad Request"};
 const struct response_entry http_404 = {404, "Not Found"};
 const struct response_entry http_500 = {500, "Internal Server Error"};
 
-// Send a response with no body (typically 400-500 codes)
-// Input: the file descriptor to write to and the response type
-// Returns 0 on success, -1 on error
-int send_empty_response(int sock_fd, struct response_entry response)
+int send_response
+(
+	const int sock_fd,
+	const struct response_entry response,
+	char* body
+)
 {
 	char response_text[MAX_REQ_LENGTH]; // Arbitrarily large
 	sprintf
 	(
 		response_text,
 		"HTTP/1.1 %d %s\r\n"
-		"Access-Control-Allow-Origin: *\r\n"
-		"Access-Control-Allow-Methods: GET, PUT, OPTIONS\r\n"
-		"Access-Control-Allow-Headers: X-PINGOTHER, Content-Type\r\n"
-		"Access-Control-Max-Age: 86400\r\n\r\n",
+		"Access-Control-Allow-Origin: http://colbyreinhart.com\r\n"
+		"Content-Length: %ld\r\n\r\n"
+		"%s",
 		response.code,
-		response.message
+		response.message,
+		(body != NULL ? strlen(body) : 0),
+		(body != NULL ? body : "")
 	);
 	if (write(sock_fd, response_text, strlen(response_text)) == -1)
 	{
 		perror("Couldn't respond to client");
-		close(sock_fd);
 		return -1;
 	}
 
-	close(sock_fd);
 	return 0;
-}
+} 

@@ -11,6 +11,6 @@ const struct response_entry http_400;
 const struct response_entry http_404;
 const struct response_entry http_500;
 
-int send_empty_response(int sock_fd, struct response_entry response);
+int send_response(int sock_fd, struct response_entry response, char* body);
 
 #endif // RESPONSE_H

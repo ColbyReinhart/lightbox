@@ -8,17 +8,21 @@
 
 #define errorQuit(msg) { perror(msg); exit(1); }
 
-int lightbox_socket;
+int handle_connect(const int sock_fd);
+int handle_options(const int sock_fd);
+int handle_get(const int sock_fd);
+int handle_put(const int sock_fd, const char* body);
+int handle_delete(const int sock_fd);
+
+int lightbox_socket = -1;
 
 int main()
 {
-	lightbox_socket = -1;
-
 	// Prepare server socket
 	const int listen_socket = make_server_socket(WEB_PORT);
 	if (listen_socket == -1) errorQuit("Couldn't make server socket");
 
-	// Accept incoming calls (no multithreading for now)
+	// Accept incoming calls
 	while(1)
 	{
 		// Get a client connection
@@ -34,64 +38,152 @@ int main()
 		}
 
 		// Split the request into the head and body
-		char* end_of_header = strstr(request, "\r\n\r\n");
+		char* const end_of_header = strstr(request, "\r\n\r\n");
 		*end_of_header = '\0';
-		char* request_header = request;
-		char* request_body = end_of_header + 4;
+		char* const request_header = request;
+		const char* const request_body = end_of_header + 4;
 
+		// TODO: replace this with a log
 		printf("%s\n-----\n%s\n", request_header, request_body);
 		
-		// Get what we care about from the header (this will improve later)
-		const char* request_type = strtok(request_header, " ");
-		const char* request_route = strtok(NULL, " ");
+		// Get what we care about from the header
+		const char* const request_type = strtok(request_header, " ");
+		const char* const request_route = strtok(NULL, " ");
 
+		// TODO: replace this with a log
 		printf("Type:\t%s\n", request_type);
 		printf("Route:\t%s\n", request_route);
 
-		// If this is a CONNECT call, save the socket
+		// TODO: convert this to tabular form
+		int action = CLOSE;
 		if (strcmp(request_type, "CONNECT") == 0)
 		{
-			if (lightbox_socket != -1)
-			{
-				close(lightbox_socket);
-			}
-			lightbox_socket = client_connection;
-			printf("Connected! Fd: %i\n", lightbox_socket);///
-
-			continue;
+			action = handle_connect(client_connection);
 		}
-
-		// If this is an OPTIONS call, send back a 200
-		if (strcmp(request_type, "OPTIONS") == 0)
+		else if (strcmp(request_type, "OPTIONS") == 0)
 		{
-			send_empty_response(client_connection, http_200);
-			continue;
+			action = handle_options(client_connection);
 		}
-
-		// Otherwise, handle the request. We'll worry about the request type later
-		// Can't do anything if the esp hasn't connected
-		if (lightbox_socket == -1)
+		else if (strcmp(request_type, "GET") == 0)
 		{
-			send_empty_response(client_connection, http_404);
-			continue;
+			action = handle_get(client_connection);
 		}
-
-		// Get the data
-		const char* red = strtok(request_body, " ");
-		const char* green = strtok(NULL, " ");
-		const char* blue = strtok(NULL, "\r\n");
-
-		// Write the data to the socket
-		char response[100] = {0};
-		sprintf(response, "%s %s %s\n", red, green, blue);
-		if (write(lightbox_socket, response, strlen(response)) > -1)
+		else if (strcmp(request_type, "PUT") == 0)
 		{
-			send_empty_response(client_connection, http_200);
+			action = handle_put(client_connection, request_body);
 		}
-		else
+		else if (strcmp(request_type, "DELETE") == 0)
 		{
-			perror("Couldn't write to lightbox");
-			send_empty_response(client_connection, http_500);
+			action = handle_delete(client_connection);
 		}
 	}
+}
+
+// If this is an OPTIONS call:
+// Send back the appropriate CORS headers
+int handle_options(const int sock_fd)
+{
+	char response[] = "HTTP/1.1 204 No Content\r\n"
+	"Access-Control-Allow-Origin: http://colbyreinhart.com"
+	"Access-Control-Allow-Methods: GET, PUT, DELETE, CONNECT, OPTIONS"
+	"Access-Control-Allow-Headers: Content-Type"
+	"Access-Control-Max-Age: 86400"; // 24 hours
+
+	if (write(sock_fd, response, strlen(response)) == -1)
+	{
+		errorQuit("Couldn't respond to preflight request");
+	}
+
+	return CLOSE;
+}
+
+// If this is a CONNECT call:
+// Close the current connection (if applicable)
+// and save the new connection
+int handle_connect(const int sock_fd)
+{
+	if (lightbox_socket != -1)
+	{
+		close(lightbox_socket);
+	}
+	lightbox_socket = sock_fd;
+	printf("Connected! Fd: %i\n", lightbox_socket);///
+
+	return CONTINUE;
+}
+
+// If this is a GET call:
+// Ask lightbox what color it currently is
+// Give this information back to the client
+int handle_get(const int sock_fd)
+{
+	// Check if we're connected
+	if (lightbox_socket == -1)
+	{
+		send_response(sock_fd, http_404, NULL);
+		return CLOSE;
+	}
+
+	// Ask lightbox what it's color is
+	char req[] = "GET\n";
+	if (write(lightbox_socket, req, strlen(req)) == -1)
+	{
+		perror("GET: couldn't write to lightbox");
+		send_response(sock_fd, http_500, NULL);
+		return CLOSE;
+	}
+
+	// Read lightbox's answer
+	char res[LIGHTBOX_MSG_LEN];
+	bzero(res, LIGHTBOX_MSG_LEN);
+	if (read(lightbox_socket, res, LIGHTBOX_MSG_LEN) == -1)
+	{
+		perror("GET: couldn't read from lightbox");
+		send_response(sock_fd, http_500, NULL);
+		return CLOSE;
+	}
+
+	// Give lightbox's answer to the client
+	send_response(sock_fd, http_200, res);
+	return CLOSE;
+}
+
+// If this is a PUT call:
+// Send the body to lightbox
+int handle_put(const int sock_fd, const char* const body)
+{
+	// Check if we're connected
+	if (lightbox_socket == -1)
+	{
+		send_response(sock_fd, http_404, NULL);
+		return CLOSE;
+	}
+
+	// Give lightbox the PUT body
+	char req[] = "GET\n";
+	if (write(lightbox_socket, body, strlen(body)) == -1)
+	{
+		perror("PUT: couldn't write to lightbox");
+		send_response(sock_fd, http_500, NULL);
+		return CLOSE;
+	}
+
+	return CLOSE;
+}
+
+// If this is a DELETE call:
+// Close the lightbox socket
+int handle_delete(const int sock_fd)
+{
+	if (lightbox_socket != -1)
+	{
+		close(lightbox_socket);
+		send_response(sock_fd, http_200, NULL);
+	}
+	else
+	{
+		send_response(sock_fd, http_200, NULL);
+	}
+
+	return CLOSE;
 }
