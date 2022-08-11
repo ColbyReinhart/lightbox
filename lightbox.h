@@ -14,8 +14,6 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include "response.h"
-
 // General
 #define QSIZE 10				// Max amount of incoming calls to queue
 #define MAX_REQ_LENGTH 8192		// Maximum length for a request
@@ -27,6 +25,5 @@
 #endif
 
 int make_server_socket(int port);
-int send_empty_response(int sock_fd, struct response_entry response);
 
 #endif // LIGHTBOX_H

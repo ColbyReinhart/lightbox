@@ -4,6 +4,7 @@
 // 7-18-2022
 
 #include "lightbox.h"
+#include "response.h"
 
 #define errorQuit(msg) { perror(msg); exit(1); }
 
