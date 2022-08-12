@@ -8,17 +8,32 @@
 #define BLUE_PIN 2
 
 WiFiClient client;
+int red = 255;
+int green = 0;
+int blue = 255;
 
-void change_color(char* message)
+void handle_req(char* message)
 {
-  const int red = atoi(strtok(message, " "));
-  const int green = atoi(strtok(NULL, " "));
-  const int blue = atoi(strtok(NULL, " "));
+  const char* const req_type = strtok(message, " ");
+  Serial.print(req_type);
+  if (strcmp(message, "PUT") == 0)
+  {
+    red = atoi(strtok(NULL, " "));
+    green = atoi(strtok(NULL, " "));
+    blue = atoi(strtok(NULL, " "));
 
-  Serial.printf("Setting to: %i %i %i\n", red, green, blue);
-  analogWrite(RED_PIN, 255 - red);
-  analogWrite(GREEN_PIN, 255 - green);
-  analogWrite(BLUE_PIN, 255 - blue);
+    Serial.printf("Setting to: %i %i %i\n", red, green, blue);
+    analogWrite(RED_PIN, 255 - red);
+    analogWrite(GREEN_PIN, 255 - green);
+    analogWrite(BLUE_PIN, 255 - blue);
+  }
+  else if(strcmp(message, "GET") == 0)
+  {
+    char res[100];
+    bzero(res, 100);
+    sprintf(res, "%i %i %i\n", red, green, blue);
+    client.println(res);
+  }
 }
 
 void setup() {
@@ -42,9 +57,9 @@ void setup() {
 
   // Set default color
   Serial.println("Setting the default colors . . .");
-  analogWrite(RED_PIN, 100);
-  analogWrite(GREEN_PIN, 1023);
-  analogWrite(BLUE_PIN, 100);
+  analogWrite(RED_PIN, 255 - red);
+  analogWrite(GREEN_PIN, 255 - green);
+  analogWrite(BLUE_PIN, 255 - blue);
   Serial.println("Success!");
 }
 
@@ -73,12 +88,10 @@ void loop() {
     if (client.available())
     {
       char ch = static_cast<char>(client.read());
-      Serial.print(ch);
-      
       ++count;
       if (count > 99 || ch == '\n')
       {
-        change_color(buffer);
+        handle_req(buffer);
         bzero(buffer, 100);
         count = 0;
       }
