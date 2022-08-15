@@ -166,7 +166,7 @@ int handle_put(const int sock_fd, const char* const body)
 
 	// Give lightbox the PUT body
 	char req[100];
-	sprintf(req, "%s\n", body);
+	sprintf(req, "PUT %s\n", body);
 	if (write(lightbox_socket, req, strlen(req)) == -1)
 	{
 		perror("PUT: couldn't write to lightbox");
