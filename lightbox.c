@@ -84,10 +84,10 @@ int main()
 int handle_options(const int sock_fd)
 {
 	char response[] = "HTTP/1.1 204 No Content\r\n"
-	"Access-Control-Allow-Origin: http://colbyreinhart.com"
-	"Access-Control-Allow-Methods: GET, PUT, DELETE, CONNECT, OPTIONS"
-	"Access-Control-Allow-Headers: Content-Type"
-	"Access-Control-Max-Age: 86400"; // 24 hours
+	"Access-Control-Allow-Origin: http://colbyreinhart.com\r\n"
+	"Access-Control-Allow-Methods: GET, PUT, DELETE, CONNECT, OPTIONS\r\n"
+	"Access-Control-Allow-Headers: Content-Type\r\n"
+	"Access-Control-Max-Age: 86400\r\n\r\n"; // 24 hours
 
 	if (write(sock_fd, response, strlen(response)) == -1)
 	{

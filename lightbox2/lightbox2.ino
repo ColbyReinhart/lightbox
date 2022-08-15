@@ -1,7 +1,6 @@
 #include <WiFiManager.h>
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
-///#include <ESP8266HTTPClient.h>
 
 #define RED_PIN 14
 #define GREEN_PIN 0
@@ -32,7 +31,7 @@ void handle_req(char* message)
     char res[100];
     bzero(res, 100);
     sprintf(res, "%i %i %i\n", red, green, blue);
-    client.println(res);
+    client.print(res);
   }
 }
 
@@ -76,7 +75,7 @@ void loop() {
   Serial.println("Sending request.");
   if (client.connected())
   {
-    client.println("CONNECT /lightbox/connect.action HTTP/1.0\r\nUser-Agent: lightbox\r\n\r\n");
+    client.print("CONNECT /lightbox HTTP/1.0\r\nUser-Agent: lightbox\r\n\r\n");
   }
 
   // Constantly receive input from server
