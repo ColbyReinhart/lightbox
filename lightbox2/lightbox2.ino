@@ -14,7 +14,7 @@ int blue = 255;
 void handle_req(char* message)
 {
   const char* const req_type = strtok(message, " ");
-  Serial.print(req_type);
+  Serial.println(req_type);
   if (strcmp(message, "PUT") == 0)
   {
     red = atoi(strtok(NULL, " "));
