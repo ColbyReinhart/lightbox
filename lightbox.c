@@ -187,6 +187,7 @@ int handle_delete(const int sock_fd)
 	if (lightbox_socket != -1)
 	{
 		close(lightbox_socket);
+		lightbox_socket = -1;
 		send_response(sock_fd, http_200, NULL);
 	}
 	else
