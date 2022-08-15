@@ -173,6 +173,9 @@ int handle_put(const int sock_fd, const char* const body)
 		return CLOSE;
 	}
 
+	// Tell the client that all went well
+	send_response(sock_fd, http_200, NULL);
+
 	return CLOSE;
 }
 
