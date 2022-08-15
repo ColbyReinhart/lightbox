@@ -76,6 +76,11 @@ int main()
 		{
 			action = handle_delete(client_connection);
 		}
+
+		if (action == CLOSE)
+		{
+			close(client_connection);
+		}
 	}
 }
 
